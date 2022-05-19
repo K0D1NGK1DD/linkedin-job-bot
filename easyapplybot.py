@@ -1,8 +1,3 @@
-#Run this first
-
-pip install -r requirements.txt
-
-#Make the changes in config
 import time, random, os, csv, platform
 import logging
 from selenium import webdriver
@@ -47,7 +42,7 @@ def setupLogger():
 class EasyApplyBot:
     setupLogger()
     # MAX_SEARCH_TIME is 10 hours by default, feel free to modify it
-    MAX_SEARCH_TIME = 10 * 60 * 60
+    MAX_SEARCH_TIME = 12 * 60 * 60
 
     def __init__(self,
                  username,
@@ -55,7 +50,8 @@ class EasyApplyBot:
                  uploads={},
                  filename='output.csv',
                  blacklist=[],
-                 blackListTitles=[]):
+                 blackListTitles=[],
+                 keyword_list=[]):
 
         log.info("Welcome to Easy Apply Bot")
         dirpath = os.getcwd()
@@ -70,6 +66,7 @@ class EasyApplyBot:
         self.wait = WebDriverWait(self.browser, 30)
         self.blacklist = blacklist
         self.blackListTitles = blackListTitles
+        self.keyword_list = keyword_list
         self.start_linkedin(username, password)
 
     def get_appliedIDs(self, filename):
@@ -119,7 +116,7 @@ class EasyApplyBot:
             log.info("TimeoutException! Username/password field or login button not found")
 
     def fill_data(self):
-        self.browser.set_window_size(0, 0)
+        self.browser.set_window_size(100, 100)
         self.browser.set_window_position(2000, 2000)
 
     def start_apply(self, positions, locations):
@@ -173,7 +170,7 @@ class EasyApplyBot:
             for i in range(300, 3000, 100):
                 self.browser.execute_script("arguments[0].scrollTo(0, {})".format(i), scrollresults)
 
-            time.sleep(1)
+            time.sleep(4)
 
             # get job links
             links = self.browser.find_elements_by_xpath(
@@ -217,19 +214,22 @@ class EasyApplyBot:
                 # get easy apply button
                 button = self.get_easy_apply_button()
                 # word filter to skip positions not wanted
-
+                
                 if button is not False:
-                    if any(word in self.browser.title for word in blackListTitles):
+                    if any(word in self.browser.title.split(" ") for word in blackListTitles):
                         log.info('skipping this application, a blacklisted keyword was found in the job position')
                         string_easy = "* Contains blacklisted keyword"
                         result = False
-                    else:
+                    elif any(word in self.browser.title.split(" ") for word in keyword_list):
                         string_easy = "* has Easy Apply Button"
                         log.info("Clicking the EASY apply button")
                         button.click()
                         time.sleep(3)
                         result = self.send_resume()
                         count_application += 1
+                    else:
+                        log.info('Job title does not contain keywords')
+                        result = False
                 else:
                     log.info("The button does not exist.")
                     string_easy = "* Doesn't have Easy Apply Button"
@@ -402,7 +402,7 @@ class EasyApplyBot:
 
     def next_jobs_page(self, position, location, jobs_per_page):
         self.browser.get(
-            "https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=" +
+            "https://www.linkedin.com/jobs/search/?distance=100&f_AL=true&f_E=1%2C2&f_TPR=r2592000&f_WT=2%2C1%2C3&keywords=" +
             position + location + "&start=" + str(jobs_per_page))
         self.avoid_lock()
         log.info("Lock avoided.")
@@ -437,6 +437,7 @@ if __name__ == '__main__':
     output_filename = output_filename[0] if len(output_filename) > 0 else 'output.csv'
     blacklist = parameters.get('blacklist', [])
     blackListTitles = parameters.get('blackListTitles', [])
+    keyword_list = parameters.get('keyword_list', [])
 
     uploads = {} if parameters.get('uploads', {}) == None else parameters.get('uploads', {})
     for key in uploads.keys():
@@ -447,7 +448,8 @@ if __name__ == '__main__':
                        uploads=uploads,
                        filename=output_filename,
                        blacklist=blacklist,
-                       blackListTitles=blackListTitles
+                       blackListTitles=blackListTitles,
+                       keyword_list=keyword_list
                        )
 
     locations = [l for l in parameters['locations'] if l != None]

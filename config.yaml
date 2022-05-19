@@ -1,27 +1,89 @@
-username: 
-password: 
+username: darrenptran@gmail.com
+password: uc$Duke1214
 
 positions:
-- Data Scientist
-- # Another position you want to search for
-- # A third position you want to search for
+- Python
 
 locations:
-- Remote
-- # A second location you want to search in 
+- California
 
-# --------- Optional Parameters -------
-# uploads:
-#  Resume: # PATH TO Resume 
-#  Cover Letter: # PATH TO cover letter
-#  Photo: # PATH TO photo
+uploads:
+ Resume: C:\Users\trand\OneDrive\Desktop\Darren_Tran_Resume.pdf
+# Cover Letter: # PATH TO cover letter
+# Photo: # PATH TO photo
 
+#output_filename:
+#- PATH TO OUTPUT FILE (default output.csv)
 
-# output_filename:
-# - # PATH TO OUTPUT FILE (default output.csv)
+#blacklist:
+#- Company names you want to ignore
 
-# blacklist:
-# - # Company names you want to ignore
+blackListTitles:
+- AR
+- VR
+- Manager
+- Lead
+- Principal
+- Founding
+- Embedded
+- Java
+- Angular
+- Hadoop
+- MongDB
+- Spark
+- Ruby
+- Rails
+- Frontend
+- Designer
+- Azure
+- GCP
+- .Net
+- .NET
+- Senior
+- Sr.
+- Embedded
+- PHP
+- iOS
+- Android
+- Swift
+- Salesforce
+- Tableau
+- Mobile
+- Controls
+- API
+- C#
+- C++
+- C
+- Verification
+- Test
+- BI
+- Golang
+- TypeScript
+- Security
+- Network
+- Warehouse
+- Pipeline
+- Prototype
+- Client
+- Growth
+- Hacker
+- Unpaid
+- Report
+- Clearance
+- PhD
+- Minimum
+- Cybersecurity
+- Instructor
+- Teacher
+- Volunteer
+- Student
+- Sales
+- Web
 
-#blackListTitles:
-#- # Add job titles you want to ignore
+keyword_list:
+- Python
+- Engineer
+- Developer
+- Researcher
+- Scientist
+- Programmer
