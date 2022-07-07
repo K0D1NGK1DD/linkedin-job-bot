@@ -51,7 +51,8 @@ class EasyApplyBot:
                  filename='output.csv',
                  blacklist=[],
                  blackListTitles=[],
-                 keyword_list=[]):
+                 keyword_list=[],
+                 avoid_list=[]):
 
         log.info("Welcome to Easy Apply Bot")
         dirpath = os.getcwd()
@@ -67,6 +68,7 @@ class EasyApplyBot:
         self.blacklist = blacklist
         self.blackListTitles = blackListTitles
         self.keyword_list = keyword_list
+        self.avoid_list = avoid_list
         self.start_linkedin(username, password)
 
     def get_appliedIDs(self, filename):
@@ -214,14 +216,15 @@ class EasyApplyBot:
                 # get easy apply button
                 button = self.get_easy_apply_button()
                 # word filter to skip positions not wanted
-                
+
                 if button is not False:
                     if any(word in self.browser.title.split(" ") for word in blackListTitles):
-                        log.info('skipping this application, a blacklisted keyword was found in the job position')
                         string_easy = "* Contains blacklisted keyword"
                         result = False
+                    elif any(word in self.browser.page_source for word in avoid_list):
+                        string_easy = "* Contains experience requirements"
+                        result = False
                     elif any(word in self.browser.title.split(" ") for word in keyword_list):
-                        string_easy = "* has Easy Apply Button"
                         log.info("Clicking the EASY apply button")
                         button.click()
                         time.sleep(3)
@@ -281,18 +284,21 @@ class EasyApplyBot:
 
     def get_job_page(self, jobID):
 
-        job = 'https://www.linkedin.com/jobs/view/' + str(jobID)
+        job = 'https://www.linkedin.com/job-apply/' + str(jobID)
         self.browser.get(job)
-        self.job_page = self.load_page(sleep=0.5)
+        self.job_page = self.load_page(sleep=2)
         return self.job_page
 
     def get_easy_apply_button(self):
         try:
-            button = self.browser.find_elements_by_xpath(
-                '//button[contains(@class, "jobs-apply")]/span[1]'
-            )
-
-            EasyApplyButton = button[0]
+            button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Continue")]')))
+            if not button:
+                button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Review")]')))
+            if not button:
+                button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Submit")]')))
+            # find_elements_by_xpath(
+            #     '//button[contains(@class, "jobs-apply")]/span[1]'
+            EasyApplyButton = button.click()
         except:
             EasyApplyButton = False
 
@@ -302,15 +308,26 @@ class EasyApplyBot:
         def is_present(button_locator):
             return len(self.browser.find_elements(button_locator[0],
                                                   button_locator[1])) > 0
-
         try:
             time.sleep(random.uniform(1.5, 2.5))
             next_locater = (By.CSS_SELECTOR,
                             "button[aria-label='Continue to next step']")
+            if not next_locater:
+                next_locater = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Continue")]')))
+                log.info(next_locater)
             review_locater = (By.CSS_SELECTOR,
                               "button[aria-label='Review your application']")
+            if not review_locater:
+                review_locater = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Continue")]')))
+                log.info(review_locater)
+            if not review_locater:
+                review_locater = (By.CSS_SELECTOR,
+                              "button[aria-label='Review']")
             submit_locater = (By.CSS_SELECTOR,
                               "button[aria-label='Submit application']")
+            if not submit_locater:
+                submit_locater = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ember949"]//footer//button[1][contains(@aria-label,"Submit")]')))
+
             submit_application_locator = (By.CSS_SELECTOR,
                                           "button[aria-label='Submit application']")
             error_locator = (By.CSS_SELECTOR,
@@ -367,8 +384,6 @@ class EasyApplyBot:
                     break
 
             time.sleep(random.uniform(1.5, 2.5))
-
-
         except Exception as e:
             log.info(e)
             log.info("cannot apply to this job")
@@ -438,6 +453,7 @@ if __name__ == '__main__':
     blacklist = parameters.get('blacklist', [])
     blackListTitles = parameters.get('blackListTitles', [])
     keyword_list = parameters.get('keyword_list', [])
+    avoid_list = parameters.get('avoid_list', [])
 
     uploads = {} if parameters.get('uploads', {}) == None else parameters.get('uploads', {})
     for key in uploads.keys():
@@ -449,7 +465,8 @@ if __name__ == '__main__':
                        filename=output_filename,
                        blacklist=blacklist,
                        blackListTitles=blackListTitles,
-                       keyword_list=keyword_list
+                       keyword_list=keyword_list,
+                       avoid_list=avoid_list
                        )
 
     locations = [l for l in parameters['locations'] if l != None]
